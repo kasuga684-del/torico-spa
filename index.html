@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>面接応募フォーム</title>
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    /* デザイン設定（紫ベース） */
+    body {
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    .container {
+      background-color: white;
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      border-top: 5px solid #4b0082; /* インディゴ */
+    }
+    h1 {
+      text-align: center;
+      font-size: 20px;
+      color: #4b0082;
+      margin-bottom: 25px;
+    }
+    label {
+      display: block;
+      font-weight: bold;
+      margin-top: 15px;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      margin-top: 5px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-sizing: border-box;
+      font-size: 16px;
+      background-color: #fafafa;
+    }
+    input:focus, select:focus {
+      border-color: #4b0082;
+      outline: none;
+      background-color: white;
+    }
+    .btn-submit {
+      width: 100%;
+      background-color: #4b0082;
+      color: white;
+      border: none;
+      padding: 15px;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 30px;
+      transition: background-color 0.3s;
+    }
+    .btn-submit:active {
+      background-color: #3a0066;
+    }
+    .loading {
+      text-align: center;
+      display: none;
+      margin-top: 20px;
+      font-weight: bold;
+      color: #666;
+    }
+    /* 日時の横並び */
+    .row {
+      display: flex;
+      gap: 10px;
+    }
+    .col-date { flex: 2; }
+    .col-time { flex: 1; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>TORICO SPA<br>面接応募フォーム</h1>
+  
+  <form id="applyForm">
+    <label>お名前 <span style="color:red">*</span></label>
+    <input type="text" name="name" placeholder="山田 花子" required>
+
+    <label>ご年齢 <span style="color:red">*</span></label>
+    <input type="number" name="age" placeholder="20" required>
+
+    <label>第1希望日時 <span style="color:red">*</span></label>
+    <div class="row">
+      <div class="col-date">
+        <input type="date" name="date1" required>
+      </div>
+      <div class="col-time">
+        <input type="time" name="time1" required>
+      </div>
+    </div>
+
+    <label>第2希望日時</label>
+    <div class="row">
+      <div class="col-date">
+        <input type="date" name="date2">
+      </div>
+      <div class="col-time">
+        <input type="time" name="time2">
+      </div>
+    </div>
+
+    <label>体験入店</label>
+    <select name="experience">
+      <option value="希望する">希望する</option>
+      <option value="相談して決める">相談して決める</option>
+      <option value="希望しない">希望しない</option>
+    </select>
+
+    <button type="submit" class="btn-submit" id="submitBtn">応募する</button>
+    <div class="loading" id="loadingMsg">送信中...しばらくお待ちください</div>
+  </form>
+</div>
+
+<script>
+  // ==================================================
+  // ▼ 設定エリア（書き換え済み）
+  // ==================================================
+  
+  // GASウェブアプリURL
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbwqPXeNYKrZpz7ChKTote_RBXuCKbpG5_DXzij7j1hWyVvV2p6J_p3H3rrDdcHxG4f6RA/exec';
+
+  // LIFF ID
+  const LIFF_ID = '2008582218-DY3ZexOm'; 
+
+  // ==================================================
+
+  let lineUserId = "";
+
+  // 1. LIFFの初期化
+  liff.init({ liffId: LIFF_ID })
+    .then(() => {
+      if (!liff.isLoggedIn()) {
+        liff.login();
+      } else {
+        // ログイン済みならID取得
+        liff.getProfile()
+          .then(profile => {
+            lineUserId = profile.userId;
+            console.log("UserID:", lineUserId);
+          })
+          .catch(err => {
+            console.error("プロフィール取得エラー", err);
+          });
+      }
+    })
+    .catch(err => {
+      console.error("LIFF初期化エラー", err);
+    });
+
+  // 2. フォーム送信時の処理
+  document.getElementById('applyForm').addEventListener('submit', function(e) {
+    e.preventDefault(); // 画面遷移を止める
+
+    if(!confirm("この内容で応募しますか？")) return;
+
+    // ボタンを無効化
+    const btn = document.getElementById('submitBtn');
+    const load = document.getElementById('loadingMsg');
+    btn.disabled = true;
+    btn.style.backgroundColor = "#ccc";
+    load.style.display = "block";
+
+    // フォームデータの取得
+    const formData = new FormData(this);
+    
+    // 送信データ作成
+    const sendData = {
+      name: formData.get('name'),
+      age: formData.get('age'),
+      date1: formData.get('date1'),
+      time1: formData.get('time1'),
+      date2: formData.get('date2'),
+      time2: formData.get('time2'),
+      experience: formData.get('experience'),
+      userId: lineUserId // LINE IDも一緒に送る
+    };
+
+    // GASへ送信
+    fetch(GAS_URL, {
+      method: 'POST',
+      mode: 'no-cors', 
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams(sendData)
+    })
+    .then(() => {
+      alert("応募が完了しました！\n担当者からの連絡をお待ちください。");
+      liff.closeWindow(); // 画面を閉じる
+    })
+    .catch(error => {
+      alert("送信に失敗しました。もう一度お試しください。");
+      console.error(error);
+      btn.disabled = false;
+      btn.style.backgroundColor = "#4b0082";
+      load.style.display = "none";
+    });
+  });
+</script>
+
+</body>
+</html>
