@@ -45,6 +45,8 @@
       box-sizing: border-box;
       font-size: 16px;
       background-color: #fafafa;
+      /* スマホでのズーム防止 */
+      transform: scale(1); 
     }
     input:focus, select:focus {
       border-color: #4b0082;
@@ -79,8 +81,8 @@
       display: flex;
       gap: 10px;
     }
-    .col-date { flex: 2; }
-    .col-time { flex: 1; }
+    .col-date { flex: 3; }
+    .col-time { flex: 2; }
   </style>
 </head>
 <body>
@@ -101,7 +103,38 @@
         <input type="date" name="date1" required>
       </div>
       <div class="col-time">
-        <input type="time" name="time1" required>
+        <select name="time1" required>
+          <option value="" hidden>時間</option>
+          <option value="10:00">10:00</option>
+          <option value="10:30">10:30</option>
+          <option value="11:00">11:00</option>
+          <option value="11:30">11:30</option>
+          <option value="12:00">12:00</option>
+          <option value="12:30">12:30</option>
+          <option value="13:00">13:00</option>
+          <option value="13:30">13:30</option>
+          <option value="14:00">14:00</option>
+          <option value="14:30">14:30</option>
+          <option value="15:00">15:00</option>
+          <option value="15:30">15:30</option>
+          <option value="16:00">16:00</option>
+          <option value="16:30">16:30</option>
+          <option value="17:00">17:00</option>
+          <option value="17:30">17:30</option>
+          <option value="18:00">18:00</option>
+          <option value="18:30">18:30</option>
+          <option value="19:00">19:00</option>
+          <option value="19:30">19:30</option>
+          <option value="20:00">20:00</option>
+          <option value="20:30">20:30</option>
+          <option value="21:00">21:00</option>
+          <option value="21:30">21:30</option>
+          <option value="22:00">22:00</option>
+          <option value="22:30">22:30</option>
+          <option value="23:00">23:00</option>
+          <option value="23:30">23:30</option>
+          <option value="24:00">24:00</option>
+        </select>
       </div>
     </div>
 
@@ -111,7 +144,38 @@
         <input type="date" name="date2">
       </div>
       <div class="col-time">
-        <input type="time" name="time2">
+        <select name="time2">
+          <option value="" hidden>時間</option>
+          <option value="10:00">10:00</option>
+          <option value="10:30">10:30</option>
+          <option value="11:00">11:00</option>
+          <option value="11:30">11:30</option>
+          <option value="12:00">12:00</option>
+          <option value="12:30">12:30</option>
+          <option value="13:00">13:00</option>
+          <option value="13:30">13:30</option>
+          <option value="14:00">14:00</option>
+          <option value="14:30">14:30</option>
+          <option value="15:00">15:00</option>
+          <option value="15:30">15:30</option>
+          <option value="16:00">16:00</option>
+          <option value="16:30">16:30</option>
+          <option value="17:00">17:00</option>
+          <option value="17:30">17:30</option>
+          <option value="18:00">18:00</option>
+          <option value="18:30">18:30</option>
+          <option value="19:00">19:00</option>
+          <option value="19:30">19:30</option>
+          <option value="20:00">20:00</option>
+          <option value="20:30">20:30</option>
+          <option value="21:00">21:00</option>
+          <option value="21:30">21:30</option>
+          <option value="22:00">22:00</option>
+          <option value="22:30">22:30</option>
+          <option value="23:00">23:00</option>
+          <option value="23:30">23:30</option>
+          <option value="24:00">24:00</option>
+        </select>
       </div>
     </div>
 
@@ -129,7 +193,7 @@
 
 <script>
   // ==================================================
-  // ▼ 設定エリア（書き換え済み）
+  // ▼ 設定エリア
   // ==================================================
   
   // GASウェブアプリURL
@@ -148,7 +212,6 @@
       if (!liff.isLoggedIn()) {
         liff.login();
       } else {
-        // ログイン済みならID取得
         liff.getProfile()
           .then(profile => {
             lineUserId = profile.userId;
@@ -165,21 +228,17 @@
 
   // 2. フォーム送信時の処理
   document.getElementById('applyForm').addEventListener('submit', function(e) {
-    e.preventDefault(); // 画面遷移を止める
+    e.preventDefault(); 
 
     if(!confirm("この内容で応募しますか？")) return;
 
-    // ボタンを無効化
     const btn = document.getElementById('submitBtn');
     const load = document.getElementById('loadingMsg');
     btn.disabled = true;
     btn.style.backgroundColor = "#ccc";
     load.style.display = "block";
 
-    // フォームデータの取得
     const formData = new FormData(this);
-    
-    // 送信データ作成
     const sendData = {
       name: formData.get('name'),
       age: formData.get('age'),
@@ -188,10 +247,9 @@
       date2: formData.get('date2'),
       time2: formData.get('time2'),
       experience: formData.get('experience'),
-      userId: lineUserId // LINE IDも一緒に送る
+      userId: lineUserId 
     };
 
-    // GASへ送信
     fetch(GAS_URL, {
       method: 'POST',
       mode: 'no-cors', 
@@ -200,7 +258,7 @@
     })
     .then(() => {
       alert("応募が完了しました！\n担当者からの連絡をお待ちください。");
-      liff.closeWindow(); // 画面を閉じる
+      liff.closeWindow(); 
     })
     .catch(error => {
       alert("送信に失敗しました。もう一度お試しください。");
